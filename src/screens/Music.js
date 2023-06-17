@@ -78,6 +78,21 @@ const Music = () => {
     }
   };
 
+  const toggleShuffle = async () => {
+    if (shuffle) {
+      // Shuffle is currently enabled, disable it
+      setShuffle(false);
+    } else {
+      // Shuffle is currently disabled, enable it
+      setShuffle(true);
+      // await TrackPlayer.shuffle();
+      let queue = await TrackPlayer.getQueue();
+      await TrackPlayer.reset();
+      queue.sort(() => Math.random() - 0.5);
+      await TrackPlayer.add(queue);
+    }
+  };
+
   const setupPlayer = async () => {
     try {
       await TrackPlayer.setupPlayer();
@@ -102,15 +117,29 @@ const Music = () => {
       });
       await TrackPlayer.add(songs);
       TrackPlayer.addEventListener('playback-queue-ended', async () => {
-        // Playback queue ended, switch to the next song
-        if (songs.length - 1 > currentSong) {
-          setCurrentSong(currentSong + 1);
+        if (shuffle) {
+          // Get a random index within the range of available songs
+          const randomIndex = Math.floor(Math.random() * songs.length);
+
+          // Skip to the randomly selected song and play it
+          setCurrentSong(randomIndex);
           ref.current.scrollToIndex({
             animated: true,
-            index: parseInt(currentSong) + 1,
+            index: randomIndex,
           });
-          await TrackPlayer.skip(parseInt(currentSong) + 1);
+          await TrackPlayer.skip(parseInt(randomIndex));
           await TrackPlayer.play();
+        } else {
+          // Playback queue ended, switch to the next song
+          if (songs.length - 1 > currentSong) {
+            setCurrentSong(currentSong + 1);
+            ref.current.scrollToIndex({
+              animated: true,
+              index: parseInt(currentSong) + 1,
+            });
+            await TrackPlayer.skip(parseInt(currentSong) + 1);
+            await TrackPlayer.play();
+          }
         }
       });
     } catch (e) {}
@@ -125,16 +154,6 @@ const Music = () => {
       if (!isExistInFavorite) {
         setFavoriteSongs(prevSongs => [...prevSongs, songCur]);
       }
-    }
-  };
-
-  const toggleShuffle = async () => {
-    if (shuffle) {
-      // Shuffle is currently enabled, disable it
-      setShuffle(false);
-    } else {
-      // Shuffle is currently disabled, enable it
-      setShuffle(true);
     }
   };
 
@@ -284,7 +303,11 @@ const Music = () => {
           </TouchableOpacity>
           <TouchableOpacity onPress={toggleShuffle}>
             <Image
-              source={require('../../assets/img/shuffle.png')}
+              source={
+                shuffle
+                  ? require('../../assets/img/shuffle1.png')
+                  : require('../../assets/img/shuffle.png')
+              }
               style={[
                 styles.icon,
                 {marginLeft: 30, width: 30, height: 30, marginRight: 15},

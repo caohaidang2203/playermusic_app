@@ -7,14 +7,27 @@ import {
   Dimensions,
   Image,
   FlatList,
+  Button,
 } from 'react-native';
 import {useNavigation} from '@react-navigation/native';
+import LinearGradient from 'react-native-linear-gradient';
 
 const {height, width} = Dimensions.get('window');
 const FavoriteScreen = ({route}) => {
   const navigation = useNavigation();
   // Function to render each favorite song item in the list
-  const {favoriteSongs} = route.params;
+  // const {favoriteSongs} = route.params;
+  const [favoriteSongs, setFavoriteSongs] = useState(
+    route.params.favoriteSongs,
+  );
+
+  const deleteSong = index => {
+    const newFavoriteSongs = [...favoriteSongs];
+    newFavoriteSongs.splice(index, 1);
+    setFavoriteSongs(newFavoriteSongs);
+    navigation.setParams({favoriteSongs: newFavoriteSongs});
+  };
+
   const renderSongItem = ({item, index}) => {
     return (
       <View>
@@ -31,7 +44,7 @@ const FavoriteScreen = ({route}) => {
             <Text style={styles.name}>{item.title}</Text>
             <Text style={styles.artist}>{item.artist}</Text>
           </View>
-          <TouchableOpacity>
+          <TouchableOpacity onPress={() => deleteSong(index)}>
             <Image
               source={require('../../assets/img/delete.png')}
               style={styles.deleteBtn}
@@ -43,17 +56,27 @@ const FavoriteScreen = ({route}) => {
   };
 
   return (
-    <View style={styles.containerPage}>
-      {favoriteSongs.length > 0 ? (
-        <FlatList
-          data={favoriteSongs}
-          renderItem={renderSongItem}
-          keyExtractor={item => item.id.toString()}
+    <LinearGradient
+      colors={['#FDFCFB', '#E2D1C3', '#E2D1C3']}
+      style={styles.linearGradient}>
+      <View style={styles.containerPage}>
+        <Button
+          title="Play favorite songs"
+          onPress={() => {
+            console.log('press');
+          }}
         />
-      ) : (
-        <Text style={styles.emptyText}>No favorite songs</Text>
-      )}
-    </View>
+        {favoriteSongs.length > 0 ? (
+          <FlatList
+            data={favoriteSongs}
+            renderItem={renderSongItem}
+            keyExtractor={item => item.id.toString()}
+          />
+        ) : (
+          <Text style={styles.emptyText}>No favorite songs</Text>
+        )}
+      </View>
+    </LinearGradient>
   );
 };
 
@@ -95,6 +118,17 @@ const styles = StyleSheet.create({
   deleteBtn: {
     width: 20,
     height: 20,
+  },
+  emptyText: {
+    fontSize: 20,
+    fontWeight: '500',
+    color: '#000',
+    marginLeft: 20,
+    marginTop: 20,
+  },
+  linearGradient: {
+    width: width,
+    height: height,
   },
 });
 
